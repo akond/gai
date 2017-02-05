@@ -10,22 +10,49 @@
 				   [org.clojure/tools.reader "1.0.0-beta4"]
 				   [org.clojure/core.async "0.2.395"]
 				   [reagent "0.6.0"]
+				   [alandipert/storage-atom "2.0.1"]
 				   [org.clojure/core.match "0.3.0-alpha4"]
 				   [cljs-http "0.1.42"]]
 
 	:plugins [[lein-figwheel "0.5.8"]
 			  [lein-cljsbuild "1.1.4" :exclusions [[org.clojure/clojure]]]]
 
+	:repl-options {:caught            clj-stacktrace.repl/pst+
+				   :skip-default-init false
+				   :host              "0.0.0.0"
+				   :port              9000}
+
+	:source-paths ["src/clj" "src/common"]
+
 	:cljsbuild {:builds
 				[{:id           "dev"
 				  :figwheel     true
-				  :source-paths ["src"]
-				  :compiler     {:main web.core
+				  :source-paths ["src/web" "src/common"]
+				  :compiler     {:main                 web.core
 								 :source-map-timestamp true
-								 :asset-path "js/compiled/out"
-								 :output-to "resources/public/js/compiled/web.js"
-								 :output-dir "resources/public/js/compiled/out"
+								 :asset-path           "js/compiled/out"
+								 :output-to            "resources/public/js/compiled/web.js"
+								 :output-dir           "resources/public/js/compiled/out"
+								 }}
+				 {:id           "min"
+				  :source-paths ["src/web" "src/common"]
+				  :compiler     {:main          web.core
+								 :optimizations :advanced
+								 :asset-path    "js/compiled/out"
+								 :output-to     "resources/public/js/compiled/min.js"
+								 :output-dir    "resources/public/js/compiled/min"
 								 }}]}
 
+	:profiles {:dev {:dependencies [[binaryage/devtools "0.8.2"]
+									[figwheel-sidecar "0.5.8"]
+									[com.cemerick/piggieback "0.2.1"]]
+					 ;; need to add dev source path here to get user.clj loaded
+					 :source-paths ["src" "dev"]
+					 ;; for CIDER
+					 ;;:plugins [[cider/cider-nrepl "0.12.0"]]
+					 :repl-options {; for nREPL dev you really need to limit output
+									:init             (set! *print-length* 50)
+									:nrepl-middleware [cemerick.piggieback/wrap-cljs-repl]}}}
 
-	:main app.core)
+
+	:main clj.app.core)

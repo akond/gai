@@ -1,0 +1,9 @@
+body {
+	padding: 20px;
+}
+
+button {margin: 5px 3px;}
+
+@keyframes blinker {
+  50% { opacity: 0; }
+}
