@@ -1,14 +1,17 @@
 (ns gai.core
 	(:require-macros [cljs.core.async.macros :refer [go go-loop]])
 	(:require [reagent.core :as r :refer [atom]]
+			  [clojure.zip :as zip :refer [vector-zip end? root edit rightmost down right node]]
 			  [cljs-http.client :as http]
 			  [cljs.core.async :refer [<! >! chan]]
-			  [gai.logic :as logic :refer [tq->id id->test id->q padded no->question prefix]]
+			  [gai.logic :as logic :refer [tq->id id->test id->q padded no->question prefix html->tags]]
 			  [gai.structure :refer [Books]]
 			  [goog.string.newlines :as newlines]
 			  [goog.array :as garray]
+			  [hickory.core :refer [parse as-hiccup parse-fragment]]
 			  [gai.view :as view]
-			  [alandipert.storage-atom :refer [local-storage]]))
+			  [alandipert.storage-atom :refer [local-storage]])
+	(:import [clojure.zip]))
 
 (enable-console-print!)
 
@@ -23,31 +26,44 @@
 (def last-viewed-test (local-storage (atom {}) :last-viewed-test))
 
 
+(extend-type js/NodeList
+	ISeqable
+	(-seq [array] (array-seq array 0)))
 
 
 (defn- last-viewed-id [error-mode?]
 	(str (.-name @active-project) "/" (if error-mode? "error" "casual")))
 
+
+(defn- +data-prefix [abc]
+	(let [insert-tag (fn [e] (update e :src (fn [s] (str "/data" s))))]
+		(loop [t (zip/next (vector-zip abc))]
+			(if (end? t) (root t) (recur (zip/next (edit t #(if (and (map? %) (contains? % :src)) (insert-tag %) %))))))))
+
+
 (defn adjust-test [id json]
-	(let [data json
-		  [t q] (no->question id)
+
+	(let [[t q] (no->question id)
 		  title-prefix (prefix (str "data/" (.-name @active-project) "/title"))
 		  answer-prefix (prefix (str "data/" (.-name @active-project) "/answers"))
-		  title-image (:que_title_img json)]
+		  {:keys [que_title que_title_img que_help que_answers_img que_answers_check que_answers]} json
+		  ]
 
 		{:id      id
 		 :test    t
 		 :no      q
-		 :title   (:que_title json)
-		 :answers (rest (:que_answers json))
-		 :correct (inc (.indexOf (to-array (:que_answers_check json)) 1))
-		 :image   (when (not-empty title-image) (title-prefix t q title-image))
+		 :title   que_title
+		 :answers (rest que_answers)
+		 :correct (inc (.indexOf (to-array que_answers_check) 1))
+		 :image   (if-not (empty? que_title_img) (title-prefix t q que_title_img))
 		 :images  (map
 					  (partial answer-prefix t q)
-					  (filter (every-pred string? not-empty) (:que_answers_img json))
+					  (filter (every-pred string? not-empty) que_answers_img)
 					  (range 1 1000))
-		 :hint    (:que_help json)
+		 :hint    (-> (vector-zip (first (as-hiccup (parse (str "<div>" que_help "</div>"))))) down rightmost down rightmost node +data-prefix)
 		 }))
+
+
 
 
 (defn adjusted-test-id [id]
@@ -71,8 +87,10 @@
 			  op (fn [n]
 					 (let [max-id (if @exam-error-mode? (count @prefs) (.-num @active-project))]
 						 (min max-id (max 1 (+ n step)))))
-			  id (adjusted-test-id (swap! active-question-id op))]
-			(reset! active-question-data (adjust-test id (<! (load-question @active-project id))))
+			  id (adjusted-test-id (swap! active-question-id op))
+			  adjusted-test (adjust-test id (<! (load-question @active-project id)))]
+			;(prn adjusted-test)
+			(reset! active-question-data adjusted-test)
 			(swap! last-viewed-test assoc (last-viewed-id @exam-error-mode?) @active-question-id)
 			)))
 
@@ -137,8 +155,9 @@
 		(reset! exam-error-mode? error-mode?)
 
 		(go
-			(let [id (adjusted-test-id @active-question-id)]
-				(reset! active-question-data (adjust-test id (<! (load-question project id))))))
+			(let [id (adjusted-test-id @active-question-id)
+				  adjusted-value (adjust-test id (<! (load-question project id)))]
+				(reset! active-question-data adjusted-value)))
 		))
 
 
@@ -147,7 +166,7 @@
 	 (case @view/mode
 		 "initial" (list [view/file-loader-component on-file-load]
 						 [view/navigation problem-questions]
-						 [view/project-selector Books select-project])
+						 [view/project-selector Books select-project (count @prefs)])
 		 "project" (view/project
 					   active-project
 					   active-question-data
@@ -161,3 +180,4 @@
 	 ])
 
 (r/render [app] (.getElementById js/document "app"))
+

@@ -55,7 +55,7 @@
 	 [navigation-button 200 on-click]])
 
 
-(defn project-selector [projects on-project-selected]
+(defn project-selector [projects on-project-selected error-count]
 	[:div {:style
 		   {:border  "1px solid"
 			:padding "20px"}}
@@ -66,12 +66,17 @@
 					  :id       (.-name project)
 					  :on-click (fn [e] (on-project-selected project false) false)}
 				  (.-title project)]
-				 " [ "
-				 [:a {:href     "#"
-					  :id       (.-name project)
-					  :on-click (fn [e] (on-project-selected project true) false)}
-				  "ошибки ]"]]
 
+				 (when (pos? error-count)
+					 [:span
+					  " -> "
+					  [:a {:href     "#"
+						   :id       (.-name project)
+						   :on-click (fn [e] (on-project-selected project true) false)}
+					   "работа над ошибками (" error-count ")"
+					   ]]
+					 )
+				 ]
 				))])
 
 
@@ -90,10 +95,10 @@
 
 (defn hint-component [hint mark-error]
 	(if @show-hint
-		(do
-			(mark-error)
-			[:div {:dangerouslySetInnerHTML {:__html hint}}])
-		[:button {:on-click #(reset! show-hint true)} "Подсказка"]))
+		  (do
+			  (mark-error)
+			  hint)
+		  [:button {:on-click #(reset! show-hint true)} "Подсказка"]))
 
 
 (defn question-component [question check-answer mark-error]
@@ -132,10 +137,13 @@
 	(when @active-question-data)
 	(let [{:keys [test no id]} @active-question-data]
 		[:div
-		 [:div (.-title @project) " > " "Билет №" test " > Вопрос №" no " ... [" id "]" ]
+		 [:div (.-title @project) " > " "Билет №" test " > Вопрос №" no " ... [" id "]"]
 		 [:hr]
 		 [navigation-top to-the-beginning]
 		 [navigation-buttons on-skip-question]
 		 [:hr]
 		 [question-component active-question-data check-answer mark-error]
 		 ]))
+
+
+

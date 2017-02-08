@@ -7,3 +7,11 @@ button {margin: 5px 3px;}
 @keyframes blinker {
   50% { opacity: 0; }
 }
+
+.small {
+    width: 50px;
+}
+
+.medium {
+    width: 75px;
+}

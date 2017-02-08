@@ -23,7 +23,7 @@
 				   :host              "0.0.0.0"
 				   :port              9000}
 
-	:source-paths ["src/cljc" "src/clj" "src/cljs"]
+	:source-paths ["src/cljc" "src/clj" "src/cljs" "dev"]
 
 	:cljsbuild {:builds
 				[{:id           "dev"

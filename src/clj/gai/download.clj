@@ -4,9 +4,9 @@
 		[gai.logic :refer :all]
 		[clojure.java.io :as io]
 		[clj-http.client :as client]
-		[clojure.zip :as z]
+
 		[cheshire.core :refer [parse-string]]
-		[hickory.core :refer [parse as-hiccup]])
+		)
 	(:import
 		(gai.structure Question Book)))
 
@@ -86,13 +86,7 @@
 				   que_help)))
 
 
-(defn- html->tags [s]
-	(filter vector?
-			(loop [t (z/next (z/vector-zip (first (as-hiccup (parse s)))))
-				   r []]
-				(if (z/end? t)
-					r
-					(recur (z/next t) (conj r (z/node t)))))))
+
 
 
 (defn download-assets [question book]
