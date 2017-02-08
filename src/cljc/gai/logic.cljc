@@ -1,4 +1,4 @@
-(ns common.logic
+(ns gai.logic
 	(:refer-clojure :exclude [format])
 	#?(:cljs
 	   (:require [goog.string :as gstring :refer [subs]]

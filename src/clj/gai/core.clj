@@ -1,13 +1,14 @@
-(ns app.core
+(ns gai.core
 	(:require [clj-http.client :as client]
-			  [app.download :refer :all]
-			  [common.structure :refer :all]
+			  [gai.structure :refer :all]
+			  [gai.download :refer :all]
 			  [clojure.java.io :as io]
 			  [clojure.pprint :refer [pprint]]
 			  [clojure.tools.reader.edn :as edn]))
 
 
+
 (defn -main []
 	(println "Starting...")
-	(download-questions Kiev)
+	(doall (download-book Kiev))
 	(println "Finished"))

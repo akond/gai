@@ -22,21 +22,21 @@
 				   :host              "0.0.0.0"
 				   :port              9000}
 
-	:source-paths ["src/clj" "src/common"]
+	:source-paths ["src/cljc" "src/clj" "src/cljs"]
 
 	:cljsbuild {:builds
 				[{:id           "dev"
 				  :figwheel     true
-				  :source-paths ["src/web" "src/common"]
-				  :compiler     {:main                 web.core
+				  :source-paths ["src/cljs" "src/cljc"]
+				  :compiler     {:main                 gai.core
 								 :source-map-timestamp true
 								 :asset-path           "js/compiled/out"
 								 :output-to            "resources/public/js/compiled/web.js"
 								 :output-dir           "resources/public/js/compiled/out"
 								 }}
 				 {:id           "min"
-				  :source-paths ["src/web" "src/common"]
-				  :compiler     {:main          web.core
+				  :source-paths ["src/cljs" "src/cljc"]
+				  :compiler     {:main          gai.core
 								 :optimizations :advanced
 								 :asset-path    "js/compiled/out"
 								 :output-to     "resources/public/js/compiled/min.js"
@@ -55,4 +55,4 @@
 									:nrepl-middleware [cemerick.piggieback/wrap-cljs-repl]}}}
 
 
-	:main clj.app.core)
+	:main gai.core)

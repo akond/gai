@@ -1,13 +1,13 @@
-(ns web.core
+(ns gai.core
 	(:require-macros [cljs.core.async.macros :refer [go go-loop]])
 	(:require [reagent.core :as r :refer [atom]]
 			  [cljs-http.client :as http]
 			  [cljs.core.async :refer [<! >! chan]]
-			  [common.logic :as logic :refer [tq->id id->test id->q padded no->question prefix]]
-			  [common.structure :refer [Projects]]
+			  [gai.logic :as logic :refer [tq->id id->test id->q padded no->question prefix]]
+			  [gai.structure :refer [Books]]
 			  [goog.string.newlines :as newlines]
 			  [goog.array :as garray]
-			  [web.view :as view]
+			  [gai.view :as view]
 			  [alandipert.storage-atom :refer [local-storage]]))
 
 (enable-console-print!)
@@ -114,7 +114,7 @@
 	(let [files (.-files (.-target e))
 		  quantity (.-length files)]
 		(doall (for [i (range quantity)]
-				   (let [file (aget files i)0
+				   (let [file (aget files i)
 						 reader (js/FileReader.)]
 					   (set! (.-onload reader) #(load-new-problem-questions (.-result reader)))
 					   (.readAsText reader file)
@@ -147,7 +147,7 @@
 	 (case @view/mode
 		 "initial" (list [view/file-loader-component on-file-load]
 						 [view/navigation problem-questions]
-						 [view/project-selector Projects select-project])
+						 [view/project-selector Books select-project])
 		 "project" (view/project
 					   active-project
 					   active-question-data

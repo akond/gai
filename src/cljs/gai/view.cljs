@@ -1,10 +1,10 @@
-(ns web.view
+(ns gai.view
 	(:require-macros
 		[cljs.core.async.macros :refer [go go-loop]])
 	(:require
 		[reagent.core :as r :refer [atom]]
 		[cljs.core.async :refer [put! chan <! >! timeout close!]]
-		[common.logic :refer [id->q id->test abs]]))
+		[gai.logic :refer [id->q id->test abs]]))
 
 
 (defonce mode (r/atom "initial"))
