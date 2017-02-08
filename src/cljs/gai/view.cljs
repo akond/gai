@@ -14,6 +14,12 @@
 (defonce show-hint (atom false))
 
 
+(defn px [x]
+	(str x "px"))
+
+(def header-styles {:font-family "Open Sans"
+					:font-size (px 20)})
+
 (defn file-loader-component [on-change]
 	[:div [:input {:type      "file"
 				   :on-change on-change}]])
@@ -82,8 +88,6 @@
 				))])
 
 
-(defn px [x]
-	(str x "px"))
 
 (def invalid-answer
 	(r/create-class
@@ -130,7 +134,7 @@
 	(let [{:keys [title test image images answers hint id]} @question]
 		^{:key (str "t" id)}
 		[:div
-		 [:h3 title]
+		 [:div {:style (into header-styles {:font-size (px 20)})} title]
 		 (when image
 			 [:div
 			  [:img {:src image}]])
@@ -160,10 +164,15 @@
 
 (defn project [project active-question-data check-answer mark-error on-skip-question to-the-beginning]
 	(when @active-question-data)
-	(let [{:keys [test no id]} @active-question-data]
+	(let [{:keys [test no id]} @active-question-data
+		  ]
 		[:div
-		 [:div (.-title @project) " > " "Билет №" test " > Вопрос №" no " ... [" id "]"]
-		 [:hr]
+		 [:div
+		  [:div {:style (into header-styles {:width "80%"
+						 :float "left"} )}
+		   (.-title @project) " > "  test "/" no ]
+		  [:div {:style (into header-styles {:text-align "right"})} id]]
+		 [:hr {:style {:clear "both"}}]
 		 [navigation-top to-the-beginning]
 		 [navigation-buttons on-skip-question]
 		 [:hr]
