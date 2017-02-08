@@ -4,7 +4,9 @@
 	(:require
 		[reagent.core :as r :refer [atom]]
 		[cljs.core.async :refer [put! chan <! >! timeout close!]]
-		[gai.logic :refer [id->q id->test abs]]))
+		[gai.logic :refer [id->q id->test abs]]
+		[goog.dom.ViewportSizeMonitor]
+		[goog.math.Box]))
 
 
 (defonce mode (r/atom "initial"))
@@ -80,6 +82,9 @@
 				))])
 
 
+(defn px [x]
+	(str x "px"))
+
 (def invalid-answer
 	(r/create-class
 		{:component-did-mount
@@ -88,17 +93,37 @@
 					 (doall (for [x (array-seq (.getElementsByTagName js/document "input"))]
 								(aset x "checked" false)))))
 		 :reagent-render
-		 (fn [] [:h1 {:style
-					  {:color     "red"
-					   :animation "blinker 1s linear infinite"}} "Не правильно"])}))
+		 (fn []
+			 (let [viewport-size (.getSize (new goog.dom.ViewportSizeMonitor))
+				   viewport-width (.-width viewport-size)
+				   viewport-height (min viewport-width (.-height viewport-size))
+				   scaled (.scale viewport-size 0.35)
+				   width (.-width scaled)
+				   height (min (.-height scaled) 100 width)]
+
+				 [:h1 {:style
+					   {:color            "red"
+						:position         "absolute"
+						:border           "1px solid"
+						:width            (px width)
+						:height           (px height)
+						:left             (px (- (/ viewport-width 2) (/ width 2)))
+						:top              (px (- (/ viewport-height 2) (/ height 2)))
+						:text-align       "center"
+						:padding          "20px"
+						:background-color "white"
+						}}
+				  [:span {:style {:line-height (px height)}}
+				   [:span {:style {:animation "blinker 1s linear infinite"}} "Не правильно"]]]
+				 ))}))
 
 
 (defn hint-component [hint mark-error]
 	(if @show-hint
-		  (do
-			  (mark-error)
-			  hint)
-		  [:button {:on-click #(reset! show-hint true)} "Подсказка"]))
+		(do
+			(mark-error)
+			hint)
+		[:button {:on-click #(reset! show-hint true)} "Подсказка"]))
 
 
 (defn question-component [question check-answer mark-error]

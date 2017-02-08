@@ -111,8 +111,9 @@
 			(move->next-question)
 			(do
 				(question->error (:id question))
-				(show-error (:id question) ans))
-			)))
+				(show-error (:id question) ans)
+				(reset! view/show-hint true)
+				))))
 
 
 (defn filter-problem-questions [csv]
