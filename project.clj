@@ -12,7 +12,8 @@
 				   [reagent "0.6.0"]
 				   [alandipert/storage-atom "2.0.1"]
 				   [org.clojure/core.match "0.3.0-alpha4"]
-				   [cljs-http "0.1.42"]]
+				   [cljs-http "0.1.42"]
+				   [hickory "0.7.0"]]
 
 	:plugins [[lein-figwheel "0.5.8"]
 			  [lein-cljsbuild "1.1.4" :exclusions [[org.clojure/clojure]]]]
