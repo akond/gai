@@ -6,12 +6,15 @@
 		[cljs.core.async :refer [put! chan <! >! timeout close!]]
 		[gai.logic :refer [id->q id->test abs]]
 		[goog.dom.ViewportSizeMonitor]
-		[goog.math.Box]))
+		[goog.math.Box]
+		[alandipert.storage-atom :refer [local-storage]]))
 
 
 (defonce mode (r/atom "initial"))
 (defonce invalid-anser-was-given (atom false))
 (defonce show-hint (atom false))
+(defonce exam-error-mode? (atom false))
+(def errors (local-storage (atom nil) :prefs))
 
 
 (defn px [x]
@@ -161,18 +164,25 @@
 		 ]))
 
 
+;exam-error-mode?
+(defn progress [project active-question-data]
+	  (let [{:keys [test no id]} @active-question-data
+			no-of-total (if @exam-error-mode? (str (inc (.indexOf @errors id)) "/" (count @errors)) (str test "/" no))]
+		   [:div
+			[:div {:style (into header-styles {:width "80%"
+											   :float "left"} )}
+			 (.-title @project) (if @exam-error-mode? " (ошибки)") " > "  no-of-total]
+			[:div {:style (into header-styles {:text-align "right"})} id]
+			[:hr {:style {:clear "both"}}]])
+	  )
+
 
 (defn project [project active-question-data check-answer mark-error on-skip-question to-the-beginning]
 	(when @active-question-data)
 	(let [{:keys [test no id]} @active-question-data
 		  ]
 		[:div
-		 [:div
-		  [:div {:style (into header-styles {:width "80%"
-						 :float "left"} )}
-		   (.-title @project) " > "  test "/" no ]
-		  [:div {:style (into header-styles {:text-align "right"})} id]]
-		 [:hr {:style {:clear "both"}}]
+		 [progress project active-question-data]
 		 [navigation-top to-the-beginning]
 		 [navigation-buttons on-skip-question]
 		 [:hr]

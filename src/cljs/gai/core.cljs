@@ -20,9 +20,8 @@
 (defonce question-status (atom []))
 (defonce active-question-id (atom nil))
 (defonce active-question-data (atom nil))
-(defonce exam-error-mode? (atom false))
 
-(def prefs (local-storage (atom nil) :prefs))
+
 (def last-viewed-test (local-storage (atom {}) :last-viewed-test))
 
 
@@ -67,7 +66,7 @@
 
 
 (defn adjusted-test-id [id]
-	(if @exam-error-mode? (nth @prefs (dec id)) id))
+	(if @view/exam-error-mode? (nth @view/errors (dec id)) id))
 
 
 (defn load-question [project id]
@@ -85,13 +84,13 @@
 	(go
 		(let [step (or step 1)
 			  op (fn [n]
-					 (let [max-id (if @exam-error-mode? (count @prefs) (.-num @active-project))]
+					 (let [max-id (if @view/exam-error-mode? (count @view/errors) (.-num @active-project))]
 						 (min max-id (max 1 (+ n step)))))
 			  id (adjusted-test-id (swap! active-question-id op))
 			  adjusted-test (adjust-test id (<! (load-question @active-project id)))]
 			;(prn adjusted-test)
 			(reset! active-question-data adjusted-test)
-			(swap! last-viewed-test assoc (last-viewed-id @exam-error-mode?) @active-question-id)
+			(swap! last-viewed-test assoc (last-viewed-id @view/exam-error-mode?) @active-question-id)
 			)))
 
 
@@ -101,7 +100,7 @@
 
 
 (defn question->error [id]
-	(swap! prefs (comp vec distinct (fnil conj [])) id))
+	(swap! view/errors (comp vec distinct (fnil conj [])) id))
 
 
 (defn check-answer [question ans]
@@ -153,7 +152,7 @@
 		(reset! active-question-data nil)
 		(reset! active-question-id first-id)
 		(reset! active-project project)
-		(reset! exam-error-mode? error-mode?)
+		(reset! view/exam-error-mode? error-mode?)
 
 		(go
 			(let [id (adjusted-test-id @active-question-id)
@@ -167,7 +166,7 @@
 	 (case @view/mode
 		 "initial" (list [view/file-loader-component on-file-load]
 						 [view/navigation problem-questions]
-						 [view/project-selector Books select-project (count @prefs)])
+						 [view/project-selector Books select-project (count @view/errors)])
 		 "project" (view/project
 					   active-project
 					   active-question-data
