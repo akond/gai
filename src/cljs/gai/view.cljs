@@ -39,7 +39,7 @@
 
 
 (defn navigation-button [step on-click]
-	(let [direction (if (neg? step) "Назад" "Вперед")]
+	(let [direction (if (neg? step) "-" "+")]
 		^{:key (str "button" step)}
 		[:button {:on-click (partial on-click step)} direction " " (abs step)]))
 
@@ -139,7 +139,7 @@
 			 [:div
 			  [:img {:src image}]])
 
-		 [:div
+		 [:div {:style {:font-family "Roboto Condensed"}}
 		  [:div {:style {:float "left" :width "70%"}}
 		   [:ol
 			(doall (for [[idx answer] (map-indexed vector answers)]
@@ -178,6 +178,3 @@
 		 [:hr]
 		 [question-component active-question-data check-answer mark-error]
 		 ]))
-
-
-
