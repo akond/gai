@@ -7,7 +7,8 @@
 		[gai.logic :refer [id->q id->test abs]]
 		[goog.dom.ViewportSizeMonitor]
 		[goog.math.Box]
-		[alandipert.storage-atom :refer [local-storage]]))
+		[alandipert.storage-atom :refer [local-storage]]
+		[thi.ng.color.core :as col]))
 
 
 (defonce mode (r/atom "initial"))
@@ -47,13 +48,9 @@
 		[:button {:on-click (partial on-click step)} direction " " (abs step)]))
 
 
-(defn navigation-top [to-the-beginning]
+(defn navigation-buttons [to-the-beginning on-click]
 	[:div {:style {:clear "both"}}
-	 [:button {:on-click to-the-beginning} "В начало"]])
-
-
-(defn navigation-buttons [on-click]
-	[:div {:style {:clear "both"}}
+	 [:button {:on-click to-the-beginning} "В начало"]
 	 [navigation-button -200 on-click]
 	 [navigation-button -80 on-click]
 	 [navigation-button -20 on-click]
@@ -167,13 +164,27 @@
 (defn colorful-progress [no]
 	{:pre [(number? no)]}
 	(let [W (/ 100 20)
-		  colors ["#FF0000" "#FF4D00" "#FF9900" "#FFE500" "#CCFF00" "#80FF00" "#33FF00" "#00FF19" "#00FF66" "#00FFB2" "#00FFFF" "#00B3FF" "#0066FF" "#001AFF" "#3300FF" "#7F00FF" "#CC00FF" "#FF00E6" "#FF0099" "#FF004D"]]
-		[:svg {:view-box "0 0 100 2"}
+		  colors (cycle ["#FFE500"])
+		  gray-colors (cycle ["#ADADAD" "#BDBDBD"])]
+		[:svg {:height   "20px"
+			   :width    "100%"
+			   :view-box "0 0 100 2"}
 		 (map #(let [left (* %2 W)
-					 right (+ left W)]
-				   [:path {:d    (str "M " left ",0 L" right ",0 L" right ",2 L" left ",2 L" left ",0")
-						   :fill %1
-						   }]) (take no colors) (range))
+					 right (+ left W)
+					 color (-> (col/css %1) col/as-hsva)
+					 luminosity (.-v color)
+					 tweaked-color (if (< 0.5 luminosity) (col/adjust-brightness color (- 0 luminosity -0.1))
+														  (col/adjust-brightness color (- 0.9 luminosity)))]
+
+				   ^{:key (str "cfp-" %2)}
+				   [:g [:path {:d    (str "M " left ",0 L" right ",0 L" right ",2 L" left ",2 L" left ",0")
+							   :fill %1}]
+					[:text {:x           (+ 1.9 left) :y 1.7
+							:fill        @(-> tweaked-color col/as-rgba col/as-css)
+							:stroke      "none"
+							:font-size   1.7
+							:font-weight "bold"
+							:font-family "Roboto Condensed"} (inc %2)]]) (concat (take no colors) (take (- 20 no) gray-colors)) (range 20))
 		 ])
 	)
 
@@ -197,8 +208,7 @@
 	(let [{:keys [test no id]} @active-question-data]
 		[:div
 		 [progress project active-question-data]
-		 [navigation-top to-the-beginning]
-		 [navigation-buttons on-skip-question]
+		 [navigation-buttons to-the-beginning on-skip-question]
 		 [:hr]
 		 [question-component active-question-data check-answer mark-error]]
 		))

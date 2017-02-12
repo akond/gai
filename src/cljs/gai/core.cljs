@@ -24,7 +24,6 @@
 
 (def k :last-viewed-test)
 (def last-viewed-test (local-storage (atom (or (storage/load-local-storage k) {})) k))
-(prn @last-viewed-test)
 
 
 (extend-type js/NodeList
@@ -81,7 +80,7 @@
 
 
 (defn move->next-question [& [step]]
-	{:pre [(number? step)]}
+	{:pre [(or (nil? step) (number? step))]}
 	(reset! view/invalid-anser-was-given false)
 	(reset! view/show-hint false)
 	(go
@@ -91,7 +90,7 @@
 						 (min max-id (max 1 (+ n step)))))
 			  id (adjusted-test-id (swap! active-question-id op))
 			  adjusted-test (adjust-test id (<! (load-question @active-project id)))]
-			;(prn adjusted-test)
+
 			(reset! active-question-data adjusted-test)
 			(swap! last-viewed-test assoc (last-viewed-id @view/exam-error-mode?) @active-question-id)
 			)))
