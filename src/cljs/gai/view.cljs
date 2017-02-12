@@ -21,7 +21,7 @@
 	(str x "px"))
 
 (def header-styles {:font-family "Open Sans"
-					:font-size (px 20)})
+					:font-size   (px 20)})
 
 (defn file-loader-component [on-change]
 	[:div [:input {:type      "file"
@@ -164,27 +164,41 @@
 		 ]))
 
 
-;exam-error-mode?
+(defn colorful-progress [no]
+	{:pre [(number? no)]}
+	(let [W (/ 100 20)
+		  colors ["#FF0000" "#FF4D00" "#FF9900" "#FFE500" "#CCFF00" "#80FF00" "#33FF00" "#00FF19" "#00FF66" "#00FFB2" "#00FFFF" "#00B3FF" "#0066FF" "#001AFF" "#3300FF" "#7F00FF" "#CC00FF" "#FF00E6" "#FF0099" "#FF004D"]]
+		[:svg {:view-box "0 0 100 2"}
+		 (map #(let [left (* %2 W)
+					 right (+ left W)]
+				   [:path {:d    (str "M " left ",0 L" right ",0 L" right ",2 L" left ",2 L" left ",0")
+						   :fill %1
+						   }]) (take no colors) (range))
+		 ])
+	)
+
+
 (defn progress [project active-question-data]
-	  (let [{:keys [test no id]} @active-question-data
-			no-of-total (if @exam-error-mode? (str (inc (.indexOf @errors id)) "/" (count @errors)) (str test "/" no))]
-		   [:div
-			[:div {:style (into header-styles {:width "80%"
-											   :float "left"} )}
-			 (.-title @project) (if @exam-error-mode? " (ошибки)") " > "  no-of-total]
-			[:div {:style (into header-styles {:text-align "right"})} id]
-			[:hr {:style {:clear "both"}}]])
-	  )
+	(let [{:keys [test no id]} @active-question-data
+		  no-of-total (if @exam-error-mode? (str (inc (.indexOf @errors id)) "/" (count @errors)) (str test "/" no))]
+		[:div
+		 [:div {:style (into header-styles {:width "80%"
+											:float "left"})}
+		  (.-title @project) (if @exam-error-mode? " (ошибки)") " > " no-of-total]
+		 [:div {:style (into header-styles {:text-align "right"})} id]
+
+		 (when-not @exam-error-mode? [colorful-progress no])
+
+		 [:hr {:style {:clear "both"}}]])
+	)
 
 
 (defn project [project active-question-data check-answer mark-error on-skip-question to-the-beginning]
-	(when @active-question-data)
-	(let [{:keys [test no id]} @active-question-data
-		  ]
+	(let [{:keys [test no id]} @active-question-data]
 		[:div
 		 [progress project active-question-data]
 		 [navigation-top to-the-beginning]
 		 [navigation-buttons on-skip-question]
 		 [:hr]
-		 [question-component active-question-data check-answer mark-error]
-		 ]))
+		 [question-component active-question-data check-answer mark-error]]
+		))

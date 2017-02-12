@@ -10,7 +10,7 @@
 			  [goog.array :as garray]
 			  [hickory.core :refer [parse as-hiccup parse-fragment]]
 			  [gai.view :as view]
-			  [alandipert.storage-atom :refer [local-storage]])
+			  [alandipert.storage-atom :as storage :refer [local-storage]])
 	(:import [clojure.zip]))
 
 (enable-console-print!)
@@ -22,7 +22,9 @@
 (defonce active-question-data (atom nil))
 
 
-(def last-viewed-test (local-storage (atom {}) :last-viewed-test))
+(def k :last-viewed-test)
+(def last-viewed-test (local-storage (atom (or (storage/load-local-storage k) {})) k))
+(prn @last-viewed-test)
 
 
 (extend-type js/NodeList
@@ -79,6 +81,7 @@
 
 
 (defn move->next-question [& [step]]
+	{:pre [(number? step)]}
 	(reset! view/invalid-anser-was-given false)
 	(reset! view/show-hint false)
 	(go
@@ -145,13 +148,12 @@
 
 
 (defn select-project [project error-mode?]
+	(reset! active-project project)
 	(let [storage-id (last-viewed-id error-mode?)
 		  first-id (or (get @last-viewed-test storage-id) 1)]
-
 		(reset! view/mode "project")
 		(reset! active-question-data nil)
 		(reset! active-question-id first-id)
-		(reset! active-project project)
 		(reset! view/exam-error-mode? error-mode?)
 
 		(go
@@ -167,13 +169,14 @@
 		 "initial" (list [view/file-loader-component on-file-load]
 						 [view/navigation problem-questions]
 						 [view/project-selector Books select-project (count @view/errors)])
-		 "project" (view/project
-					   active-project
-					   active-question-data
-					   check-answer
-					   (partial question->error (:id @active-question-data))
-					   on-skip-question
-					   (fn [] (reset! view/mode "initial"))))
+		 "project" (when-let [project @active-question-data]
+					   (view/project
+						   active-project
+						   active-question-data
+						   check-answer
+						   (partial question->error (:id @active-question-data))
+						   on-skip-question
+						   (fn [] (reset! view/mode "initial")))))
 
 	 (when (< @active-question-id (count @problem-questions))
 		 [view/navigation-buttons move->next-question])
